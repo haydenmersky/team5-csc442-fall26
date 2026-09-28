@@ -43,17 +43,18 @@ fn decode7(bits: &str) -> String {
 fn write(bytes: &str){
     // Print the bytes to standard output
     print!("{}", bytes);
+    print!("\n");
 }
 
 
 fn main() {
-    let mut rawText = String::new();
+    let mut raw_text = String::new();
     io::stdin() // Using standard in I/O
-        .read_to_string(&mut rawText) // Append input to rawText (NEED &mut to change contents of string)
+        .read_to_string(&mut raw_text) // Append input to raw_text (NEED &mut to change contents of string)
         .expect("Failed to read input"); // If it fails, return
 
 
-    let text = rawText.trim();// Remove \n from input
+    let text = raw_text.trim();// Remove \n from input
     let len = text.len();
 
     // Determine if input is 7 bit or 8 bit
@@ -63,25 +64,16 @@ fn main() {
 
     // Decodes with 7 or 8 based on above boolean
     // Setup in 2 if statements so if both are true, both run
-    // If the input is 7 bit ASCII and not 8 bit ASCII, decode as 7 bit
-    if seven_bit && !eight_bit {
+    if seven_bit{
         // Decode ASCII 7 bit binary string to string
         let processed = decode7(text);
         write(&processed);
     }
-    // If the input is 8 bit ASCII and not 7 bit ASCII, decode as 8 bit
-    else if eight_bit && !seven_bit {
+
+    if eight_bit{
         // Decode ASCII 8 bit binary string to string
         let processed = decode8(text);
         write(&processed);
     } 
-    // If the input is both 7 bit and 8 bit ASCII, print an error message
-    else if seven_bit && eight_bit {
-    eprintln!("Ambiguous encoding.");
-    }
-    // If the input is neither 7 bit nor 8 bit ASCII, print anerror message
-    else {
-    eprintln!("Invalid input length.");
-}
 
 }
