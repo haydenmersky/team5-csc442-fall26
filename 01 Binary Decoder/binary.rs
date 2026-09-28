@@ -1,15 +1,49 @@
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
 
-//fn decode(bits, width){
+// Decode 8 bit binary string to ASCII
+fn decode8(bits: &str) -> String {
+    bits
+        // Convert the string to bytes
+        .as_bytes()
+        // Split the bytes into chunks of 8 bits
+        .chunks(8)
+        // Map each chunk to a character
+        .map(|chunk| {
+            // Convert the chunk of bytes to a string
+            let binary = std::str::from_utf8(chunk).unwrap();
+            // Convert the binary string to a u8 integer
+            let byte = u8::from_str_radix(binary, 2).unwrap();
+            // Convert the u8 integer to a character
+            byte as char
+        })
+        // Collect the characters into a string
+        .collect()
+}
+// Decode 7 bit binary string to ASCII
+fn decode7(bits: &str) -> String {
+    bits
+        // Convert the string to bytes
+        .as_bytes()
+        // Split the bytes into chunks of 7 bits
+        .chunks(7)
+        // Map each chunk to a character
+        .map(|chunk| {
+            // Convert the chunk of bytes to a string
+            let binary = std::str::from_utf8(chunk).unwrap();
+            // Convert the binary string to a u8 integer
+            let byte = u8::from_str_radix(binary, 2).unwrap();
+            // Convert the u8 integer to a character
+            byte as char
+        })
+        // Collect the characters into a string
+        .collect()
+}
 
-    //}
-
-    fn write(bytes){
-        let mut stdout = io::stdout();
-        stdout.write_all(bytes.as_bytes()).expect("Failed to write output");
-        stdout.flush().expect("Failed to flush output");
-        Ok(());
-    }
+// Write to standard output
+fn write(bytes: &str){
+    // Print the bytes to standard output
+    print!("{}", bytes);
+}
 
 
 fn main() {
@@ -19,8 +53,8 @@ fn main() {
         .expect("Failed to read input"); // If it fails, return
 
 
-
-    let len = rawText.len();
+    let text = rawText.trim();// Remove \n from input
+    let len = text.len();
 
     // Determine if input is 7 bit or 8 bit
     let seven_bit = len % 7 == 0;
@@ -29,14 +63,25 @@ fn main() {
 
     // Decodes with 7 or 8 based on above boolean
     // Setup in 2 if statements so if both are true, both run
-    if seven_bit {
-        let processed = decode(&rawText, 7);
+    // If the input is 7 bit ASCII and not 8 bit ASCII, decode as 7 bit
+    if seven_bit && !eight_bit {
+        // Decode ASCII 7 bit binary string to string
+        let processed = decode7(text);
         write(&processed);
     }
-
-    if eight_bit {
-        let processed = decode(&rawText, 8);
+    // If the input is 8 bit ASCII and not 7 bit ASCII, decode as 8 bit
+    else if eight_bit && !seven_bit {
+        // Decode ASCII 8 bit binary string to string
+        let processed = decode8(text);
         write(&processed);
+    } 
+    // If the input is both 7 bit and 8 bit ASCII, print an error message
+    else if seven_bit && eight_bit {
+    eprintln!("Ambiguous encoding.");
     }
+    // If the input is neither 7 bit nor 8 bit ASCII, print anerror message
+    else {
+    eprintln!("Invalid input length.");
+}
 
 }
