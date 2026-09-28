@@ -4,9 +4,12 @@ use std::io::{self, Read, Write};
 
     //}
 
-    //fn write(bytes){
-
-    //}
+    fn write(bytes){
+        let mut stdout = io::stdout();
+        stdout.write_all(bytes.as_bytes()).expect("Failed to write output");
+        stdout.flush().expect("Failed to flush output");
+        Ok(());
+    }
 
 
 fn main() {
