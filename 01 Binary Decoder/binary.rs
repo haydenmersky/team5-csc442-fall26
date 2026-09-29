@@ -39,14 +39,6 @@ fn decode7(bits: &str) -> String {
         .collect()
 }
 
-// Write to standard output
-fn write(bytes: &str){
-    // Print the bytes to standard output
-    print!("{}", bytes);
-    print!("\n");
-}
-
-
 fn main() {
     let mut raw_text = String::new();
     io::stdin() // Using standard in I/O
@@ -67,13 +59,13 @@ fn main() {
     if seven_bit{
         // Decode ASCII 7 bit binary string to string
         let processed = decode7(text);
-        write(&processed);
+        println!("{}", &processed);
     }
 
     if eight_bit{
         // Decode ASCII 8 bit binary string to string
         let processed = decode8(text);
-        write(&processed);
+        println!("{}", &processed);
     } 
 
 }
