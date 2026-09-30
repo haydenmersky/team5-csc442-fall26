@@ -68,7 +68,7 @@ fn main() {
         println!("{}", &processed);
     } 
 
-    if (!eight_bit && !seven_bit){
+    if !eight_bit && !seven_bit{
         eprintln!("Unable to parse");
     }
 
