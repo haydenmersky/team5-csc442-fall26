@@ -1,3 +1,7 @@
+use std::env;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
 // Encrypt plaintext using the Vigenere cipher.
 fn encode(text: &str, key: &str) -> String { 
     // Keep only letters from the key and convert them to uppercase.
@@ -66,4 +70,68 @@ fn decode(text: &str, key: &str) -> String {
     }
 
     result
+}
+
+// reads from a file 
+fn read_file(filename: &str){
+    let file = File::open(filename).expect("Could not open log file");
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let line = line.expect("Could not read line");
+        println!("{}", line);
+    }
+}
+
+// prints the usage instructions
+fn print_usage(){
+    println!("Usage:");
+    println!("For usage in the terminal:\n./vigenere (-e or -d) (key)\nWhere -e is for encoding, and -d is for decoding.");
+    println!("For usage with a file:\n./vigenere (-e or -d) (key) (< or >) (filename)\nWhere < is for reading from a file and > is for writing to a file.");
+    std::process::exit(1);
+}
+
+fn main(){
+    let args: Vec<String> = env::args().collect();
+    let mut coding_mode = "";
+    let mut key = "";
+
+    // finds if the input has the right number of arguments
+    // and if it has the right parameters
+    // or else it prints the instructions on how to use the program
+    match args.len(){
+        3 => {
+            if (&args[1] == "-e") || &args[1] == "-d" {
+                coding_mode = &args[1];
+                key = &args[2];
+            }
+            else{
+                print_usage();
+            }
+
+        }
+        5 => {
+            if (&args[1] == "-e") || &args[1] == "-d" {
+                coding_mode = &args[1];
+                key = &args[2];
+                if args[3] == "<" {
+                    read_file(&args[4]);
+                }
+                else if args[3] == ">" {
+                    // to add: write file function?
+                    println!("Will write to file: {}", args[4]);
+                }
+            }
+            else{
+                print_usage();
+            }
+        }
+        _ => print_usage();
+    }
+
+    // testing prints
+    // note: after testing a few times, it looks like ">" automatically writes what is printed
+    // to the terminal to the given file. so you probably could just print the decoded/encoded text here
+    println!("Coding mode: {}", coding_mode);
+    println!("Key: {}", key);
 }
