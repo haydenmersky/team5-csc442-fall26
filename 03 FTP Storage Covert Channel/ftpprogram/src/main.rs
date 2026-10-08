@@ -64,10 +64,10 @@ fn decode(perms: &[String]) -> String {
 
         let value = bits
             .iter()
-            .fold(0u32, |acc, &c| acc << 1 | (c != '-') as u32);
+            .fold(0u32, |acc, &c| acc << 1 | (c != '-') as u32); // turn into integer, 1 for anything other and '-' and 0 for '-'
 
         if let Some(ch) = char::from_u32(value) {
-            decoded.push(ch);
+            decoded.push(ch); // If it's a valid unicode character, push it to ch
         }
 
     }
