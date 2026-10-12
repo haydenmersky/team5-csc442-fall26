@@ -1,13 +1,13 @@
 use std::process::{Command,Stdio};
-use std::io::{Write, Read};
+use std::io::{Write};
 
 // Constants
 const HOST: &str = "localhost";
 const PORT: u16 = 21;
 const DIR: &str = "/";
-const METHOD: u8 = 7;
+const METHOD: u8 = 7; // 7 or 10
 
-fn getPerms() {
+fn get_perms() -> Vec<String> {
 
     let mut ftp = Command::new("ftp")
                 
@@ -15,36 +15,35 @@ fn getPerms() {
         .arg(PORT.to_string())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::null())
         .spawn()
         .unwrap();
-  
+    {
     let stdin = ftp.stdin.as_mut().unwrap();    
     writeln!(stdin, "anonymous").unwrap();
     writeln!(stdin, "").unwrap();
     writeln!(stdin, "passive").unwrap();
+    writeln!(stdin, "cd {}", DIR).unwrap();
     writeln!(stdin, "ls").unwrap();
     writeln!(stdin, "quit").unwrap();  
-    
-
-    let _ = stdin;    
-
-    let mut output = String::new();
-
-    ftp.stdout
-        .as_mut()
-        .unwrap()
-        .read_to_string(&mut output)
-        .unwrap();    
-    
-    let mut unsigned_int: u8 = 1;
-    for line in output.lines() {
-        if line.len() >= 10 && unsigned_int<1{
-            println!("{}", &line[0..10]);
-        }
-        else {
-            unsigned_int -= 1;
-        }
     }
+
+    drop(ftp.stdin.take()); // Close stdin to signal EOF to the ftp process
+
+    let output = ftp.wait_with_output().unwrap();
+    let text = String::from_utf8_lossy(&output.stdout);
+
+    let mut perms = Vec::new();
+    for line in text.lines() {
+        let p: Vec<char> = line.chars().take(10).collect();
+        if p.len() == 10 
+            && "-dlcbps".contains(p[0]) // Check if the first character is a valid file type
+            && p[1..].iter().all(|&c| "rwxsStT-".contains(c)) // Check if the remaining characters are valid permission characters
+            {
+                perms.push(p.into_iter().collect()); // Collect the characters into a String and push to perms
+            }
+    }
+    perms
 }
 
 fn decode(perms: &[String]) -> String {
@@ -76,6 +75,6 @@ fn decode(perms: &[String]) -> String {
 
     
 fn main(){
-    let test = getPerms();
+    let test = get_perms();
     println!("{}", decode(&test));
 }

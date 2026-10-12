@@ -1,48 +1,80 @@
 use std::process::{Command,Stdio};
-use std::io::{Write, Read};
+use std::io::{Write};
 
+// Constants
+const HOST: &str = "localhost";
+const PORT: u16 = 21;
+const DIR: &str = "/";
+const METHOD: u8 = 7; // 7 or 10
 
-fn getPerms() {
+fn get_perms() -> Vec<String> {
 
     let mut ftp = Command::new("ftp")
                 
-        .arg("localhost")
+        .arg(HOST)
+        .arg(PORT.to_string())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::null())
         .spawn()
         .unwrap();
-  
+    {
     let stdin = ftp.stdin.as_mut().unwrap();    
     writeln!(stdin, "anonymous").unwrap();
     writeln!(stdin, "").unwrap();
     writeln!(stdin, "passive").unwrap();
+    writeln!(stdin, "cd {}", DIR).unwrap();
     writeln!(stdin, "ls").unwrap();
     writeln!(stdin, "quit").unwrap();  
-    
-
-    let _ = stdin;    
-
-    let mut output = String::new();
-
-    ftp.stdout
-        .as_mut()
-        .unwrap()
-        .read_to_string(&mut output)
-        .unwrap();    
-    println!("FTP OUTPUT:");
-    println!("{}", output);
-    
-    let mut unsigned_int: u8 = 1;
-    for line in output.lines() {
-        if line.len() >= 10 && unsigned_int<1{
-            println!("{}", &line[0..10]);
-        }
-        else {
-            unsigned_int -= 1;
-        }
     }
+
+    drop(ftp.stdin.take()); // Close stdin to signal EOF to the ftp process
+
+    let output = ftp.wait_with_output().unwrap();
+    let text = String::from_utf8_lossy(&output.stdout);
+
+    let mut perms = Vec::new();
+    for line in text.lines() {
+        let p: Vec<char> = line.chars().take(10).collect();
+        if p.len() == 10 
+            && "-dlcbps".contains(p[0]) // Check if the first character is a valid file type
+            && p[1..].iter().all(|&c| "rwxsStT-".contains(c)) // Check if the remaining characters are valid permission characters
+            {
+                perms.push(p.into_iter().collect()); // Collect the characters into a String and push to perms
+            }
+    }
+    perms
 }
 
+fn decode(perms: &[String]) -> String {
+    let mut decoded = String::new();
+
+    for perm in perms {
+        let chars: Vec<char> = perm.chars().collect();
+
+        let bits: &[char] = if METHOD == 7 {
+            if chars[..3].iter().any(|&c| c != '-') {
+                continue; // If METHOD is 7, skip this permission string if the first three characters are not all -
+            }
+            &chars[3..] // If METHOD is 7, still use permissions after first three if first 3 are empty
+        } else {
+            &chars[..] // If METHOD isn't 7, use all characters of permission string
+        };
+
+        let value = bits
+            .iter()
+            .fold(0u32, |acc, &c| acc << 1 | (c != '-') as u32); // turn into integer, 1 for anything other and '-' and 0 for '-'
+
+        if let Some(ch) = char::from_u32(value) {
+            decoded.push(ch); // If it's a valid unicode character, push it to ch
+        }
+
+    }
+    decoded
+}
+
+    
 fn main(){
-    let test = getPerms();
+    let test = get_perms();
+    println!("{}", decode(&test));
 }
