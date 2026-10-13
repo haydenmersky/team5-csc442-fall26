@@ -22,5 +22,7 @@ Amanda Berg
 - Documentation
 
 Saurav
-
+- Logged into the FTP server and explored its directory structure.
+- Navigated through the server to locate directories 10 and 7.
+- Investigated file names, extensions, and permissions to identify potential clues.
 
