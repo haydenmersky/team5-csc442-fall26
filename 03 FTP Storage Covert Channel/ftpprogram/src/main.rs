@@ -2,15 +2,15 @@ use std::process::{Command,Stdio};
 use std::io::{Write};
 
 // Constants
-const HOST: &str = "localhost";
+const HOST: &str = "138.47.99.21";
 const PORT: u16 = 21;
-const DIR: &str = "/";
+const DIR: &str = "/7";
 const METHOD: u8 = 7; // 7 or 10
 
 fn get_perms() -> Vec<String> {
 
     let mut ftp = Command::new("ftp")
-                
+        .arg("-n")
         .arg(HOST)
         .arg(PORT.to_string())
         .stdin(Stdio::piped())
@@ -20,9 +20,7 @@ fn get_perms() -> Vec<String> {
         .unwrap();
     {
     let stdin = ftp.stdin.as_mut().unwrap();    
-    writeln!(stdin, "anonymous").unwrap();
-    writeln!(stdin, "").unwrap();
-    writeln!(stdin, "passive").unwrap();
+    writeln!(stdin, "user anonymous anonymous").unwrap();
     writeln!(stdin, "cd {}", DIR).unwrap();
     writeln!(stdin, "ls").unwrap();
     writeln!(stdin, "quit").unwrap();  
