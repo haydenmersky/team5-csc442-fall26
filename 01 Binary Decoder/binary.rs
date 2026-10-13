@@ -58,7 +58,7 @@ fn main() {
     io::stdin() // Using standard in I/O
         .read_to_string(&mut raw_text) // Append input to raw_text (NEED &mut to change contents of string)
         .expect("Failed to read input"); // If it fails, return
-
+    
 
     let text = raw_text.trim();// Remove \n from input
     let len = text.len();

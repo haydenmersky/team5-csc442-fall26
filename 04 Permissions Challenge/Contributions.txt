@@ -1,6 +1,8 @@
 Andy Miletello
 
-
+- Discovered the Atbash and Vigenere cyphere
+- Found folders 10 and 7 in the ftp channel
+- Used both cyphers to get the encoded user and pass and decoded surrounding text, but not the polaris vigenere
 
 Hayden Mersky
 
