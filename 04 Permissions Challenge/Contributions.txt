@@ -1,0 +1,21 @@
+Andy Miletello
+
+
+
+Hayden Mersky
+
+- Decoded binary to the atbash cyphered FTP Server info
+- Modified FTP server permission program to decipher permissions from the challenge server
+- Found final message
+
+Ryan Bourge
+
+
+
+Amanda Berg
+
+
+
+Saurav
+
+

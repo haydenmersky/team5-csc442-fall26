@@ -6,8 +6,8 @@ const HOST: &str = "138.47.98.222";
 const PORT: u16 = 21;
 const USER: &str = "polaris";
 const PASS: &str = "northstar";
-const DIR: &str = "/files/7";
-const METHOD: u8 = 7; // 7 or 10
+const DIR: &str = "/files/10";
+const METHOD: u8 = 10; // 7 or 10
 
 fn get_perms() -> Vec<String> {
 
