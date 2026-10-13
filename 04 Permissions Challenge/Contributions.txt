@@ -16,7 +16,10 @@ Ryan Bourge
 
 Amanda Berg
 
-
+- Found out how to decode starting file
+- Decoded pass from Vigenere
+- Found correct user and pass to log into the FTP server
+- Documentation
 
 Saurav
 
