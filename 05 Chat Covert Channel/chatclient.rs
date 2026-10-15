@@ -1,9 +1,39 @@
 use std::io::{self, BufReader, Write, Read};
 use std::net::TcpStream;
+use std::time::{Duration, Instant};
+
+// CHANGE ADDRESS AND PORT HERE
+const ADDRESS: &str = "localhost";
+const PORT: &str = "1337";
+const ZERO: u64 = 25;
+const ONE: u64 = 100;
+
+// helper function from section 2.4
+fn bits_to_string(bits: &str) -> String {
+	let mut result = String::new();
+	let mut i = 0;
+
+	// getting an extra zero when decoding, so removing first char
+	let input = &bits[1..bits.len() - 1];	
+
+	while i + 8 <= input.len()
+	{
+		// each char is 8 bits, so split string into chunks of 8 bits
+		match u8::from_str_radix(&input[i..i + 8], 2) 
+		{
+			Ok(n) => result.push(n as char),
+			Err(_) => result.push('?'),
+		}
+		i += 8;
+	}
+	result
+}
+
 
 fn main()
 {
-	let stream = match TcpStream::connect("localhost:1337")
+	// connecting to server
+	let stream = match TcpStream::connect(format!("{ADDRESS}:{PORT}"))
 	{
 		Ok(s) => s,
 		Err(e) =>
@@ -12,16 +42,24 @@ fn main()
 			std::process::exit(1);
 		}
 	};
+	println!("Connected to server. Recieving overt message: ");
 
-	println!("Connected to server. Recieving message: ");
 	//let mut writer = stream.try_clone().expect("Failed to clone stream.");
 	let mut reader = BufReader::new(stream);
 	let mut byte = [0u8, 1];
+	let mut times: Vec<Duration> = Vec::new();
+	let mut covert_string = String::new();
+	let threshold = Duration::from_millis((ZERO + ONE) / 2);
+	let mut covert_bits = String::new();
 
 	// from section 2.2 of covert timing lab
 	loop
 	{
-		match reader.read(&mut byte)
+		let start = Instant::now();
+		let n = reader.read(&mut byte);
+		let elapsed = start.elapsed();
+
+		match n
 		{
 			Ok(0) => // print when the server runs out of characters to send
 			{
@@ -39,8 +77,29 @@ fn main()
 				break;
 			}
 		}
+		times.push(elapsed);
+
+		if elapsed >= threshold
+		{
+			covert_bits.push('1');
+		}
+		else
+		{
+			covert_bits.push('0');
+		}
+		
+		//let temp_str = &bits_to_string(&covert_bits);
+		//println!("{temp_str}");	
 	}
 
+	//println!("{covert_bits}");
+	covert_string.push_str(&bits_to_string(&covert_bits));
+
+	println!("Covert message:");
+	println!("{covert_string}");
+	
+	//println!("{times:?}");
+	
 	/*
 	// read lines from stdin, send to server
 	let stdin = io::stdin();
@@ -75,3 +134,4 @@ fn main()
 	}
 	*/
 }
+
