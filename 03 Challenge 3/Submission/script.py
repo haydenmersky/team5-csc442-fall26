@@ -1,3 +1,5 @@
+#python3 script.py
+
 import hashlib
 import itertools
 
