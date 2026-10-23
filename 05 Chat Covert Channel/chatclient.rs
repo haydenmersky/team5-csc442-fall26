@@ -52,12 +52,12 @@ fn main()
 	let threshold = Duration::from_millis((ZERO + ONE) / 2);
 	let mut covert_bits = String::new();
 	let mut overt_string = String::new();
-	let mut start = Instant::now();
+	
 
 	// from section 2.2 of covert timing lab
 	loop
 	{
-
+		let mut start = Instant::now();
 		let n = reader.read(&mut byte);
 
 		match n
@@ -90,15 +90,11 @@ fn main()
 				}
 
 				// if message has EOF, end loop
-				if overt_string.contains("EOF")
+				if overt_string.ends_with("EOF")
 				{
 					println!("\nMessage recieved. Disconnecting from server.");
 					break;
 				}
-				
-				//reset timer after execution of code so that time isn't counted
-				let restart = Instant::now();
-				start = restart;
 
 			}
 			Err(e) => // print error if there is one
