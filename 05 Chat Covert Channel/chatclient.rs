@@ -46,18 +46,19 @@ fn main()
 
 	//let mut writer = stream.try_clone().expect("Failed to clone stream.");
 	let mut reader = BufReader::new(stream);
-	let mut byte = [0u8, 1];
+	let mut byte = [0u8; 1];
 	let mut times: Vec<Duration> = Vec::new();
 	let mut covert_string = String::new();
 	let threshold = Duration::from_millis((ZERO + ONE) / 2);
 	let mut covert_bits = String::new();
+	let mut start = Instant::now();
+	let mut overt_string = String::new();
 
 	// from section 2.2 of covert timing lab
 	loop
 	{
-		let start = Instant::now();
+
 		let n = reader.read(&mut byte);
-		let elapsed = start.elapsed();
 
 		match n
 		{
@@ -68,8 +69,17 @@ fn main()
 			}
 			Ok(_) => // print each letter from server
 			{
+				// measure time since last read
+				let now = Instant::now();
+				let elapsed = now.durationn_since(start);
+            	times.push(elapsed);
+
+				//store recieved message
+				overt_string.push(byte[0] as char)
+
 				print!("{}", byte[0] as char);
 				io::stdout().flush().ok();
+
 			}
 			Err(e) => // print error if there is one
 			{
@@ -77,7 +87,6 @@ fn main()
 				break;
 			}
 		}
-		times.push(elapsed);
 
 		if elapsed >= threshold
 		{
@@ -87,7 +96,18 @@ fn main()
 		{
 			covert_bits.push('0');
 		}
-		
+
+		// if message has EOF, end loop
+		if bits_to_string(&covert_bits).contains("EOF")
+				{
+					println!("\nMessage recieved. Disconnecting from server.");
+					break;
+				}
+
+		//reset timer after execution of code so that time isn't counted
+		let restart = Instant::now();
+		start = restart;
+
 		//let temp_str = &bits_to_string(&covert_bits);
 		//println!("{temp_str}");	
 	}
