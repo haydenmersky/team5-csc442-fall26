@@ -1,85 +1,156 @@
 
-
-use std::io::{self, Read, Write};
+use std::io::{self, BufReader, Write, Read};
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
 
-// Chat server provided for the assignment.
+// CHANGE ADDRESS AND PORT HERE
 const ADDRESS: &str = "138.47.99.29";
 const PORT: &str = "31337";
 const ZERO: u64 = 25;
 const ONE: u64 = 100;
 
-// Convert each complete group of eight covert bits to a character.
+// helper function from section 2.4
 fn bits_to_string(bits: &str) -> String {
-    bits.as_bytes()
-        .chunks_exact(8)
-        .map(|chunk| {
-            u8::from_str_radix(std::str::from_utf8(chunk).unwrap_or(""), 2)
-                .map(char::from)
-                .unwrap_or('?')
-        })
-        .collect()
+	let mut result = String::new();
+	let mut i = 0;
+
+	// getting an extra zero when decoding, so removing first char
+	let input = &bits[1..bits.len() - 1];	
+
+	while i + 8 <= input.len()
+	{
+		// each char is 8 bits, so split string into chunks of 8 bits
+		match u8::from_str_radix(&input[i..i + 8], 2) 
+		{
+			Ok(n) => result.push(n as char),
+			Err(_) => result.push('?'),
+		}
+		i += 8;
+	}
+	result
 }
 
-fn main() -> io::Result<()> {
-    // The default server works with ./chatclient. An optional address allows
-    // testing with a local server: ./chatclient 127.0.0.1:1337
-    let address = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| format!("{ADDRESS}:{PORT}"));
-    let mut stream = TcpStream::connect(&address)?;
 
-    // Read one byte at a time to preserve timing information. BufReader can
-    // receive multiple bytes at once, obscuring the original delays.
-    let mut byte = [0u8; 1];
-    let mut previous_arrival: Option<Instant> = None;
-    let mut overt_end = Vec::with_capacity(3);
-    let mut covert_bits = String::new();
-    let mut times: Vec<Duration> = Vec::new();
-    let threshold = Duration::from_millis((ZERO + ONE) / 2);
+fn main()
+{
+	// connecting to server
+	let stream = match TcpStream::connect(format!("{ADDRESS}:{PORT}"))
+	{
+		Ok(s) => s,
+		Err(e) =>
+		{
+			eprintln!("Error connecting: {e}");
+			std::process::exit(1);
+		}
+	};
+	println!("Connected to server. Recieving overt message: ");
 
-    println!("Connected to server. Receiving overt message:");
-    loop {
-        if stream.read(&mut byte)? == 0 {
-            eprintln!("Server closed the connection before overt EOF.");
-            break;
-        }
-        let arrival = Instant::now();
+	//let mut writer = stream.try_clone().expect("Failed to clone stream.");
+	let mut reader = BufReader::new(stream);
+	let mut byte = [0u8; 1];
+	let mut times: Vec<Duration> = Vec::new();
+	let mut covert_string = String::new();
+	let threshold = Duration::from_millis((ZERO + ONE) / 2);
+	let mut covert_bits = String::new();
+	let mut overt_string = String::new();
+	
 
-        // Each delay between two received bytes represents one covert bit.
-        if let Some(previous) = previous_arrival {
-            let elapsed = arrival.duration_since(previous);
-            times.push(elapsed);
-            covert_bits.push(if elapsed >= threshold { '1' } else { '0' });
-        }
-        previous_arrival = Some(arrival);
+	// from section 2.2 of covert timing lab
+	loop
+	{
+		let mut start = Instant::now();
+		let n = reader.read(&mut byte);
 
-        // Display the overt message as it arrives.
-        print!("{}", char::from(byte[0]));
-        io::stdout().flush()?;
+		match n
+		{
+			Ok(0) => // print when the server runs out of characters to send
+			{
+				println!("\nServer closed connection.");
+				break;
+			}
+			Ok(_) => // print each letter from server
+			{
+				// measure time since last read
+				let now = Instant::now();
+				let elapsed = now.duration_since(start);
+            	times.push(elapsed);
 
-        // The overt message ends with EOF.
-        overt_end.push(byte[0]);
-        if overt_end.len() > 3 {
-            overt_end.remove(0);
-        }
-        if overt_end == b"EOF" {
-            // The three EOF marker bytes are not part of the covert message
-            // in the tested server protocol; discard their timing bits.
-            covert_bits.truncate(covert_bits.len().saturating_sub(3));
-            println!("\nMessage received. Disconnecting from server.");
-            break;
-        }
-    }
+				//store recieved message
+				overt_string.push(byte[0] as char);
 
-    println!("Covert message:\n{}", bits_to_string(&covert_bits));
+				print!("{}", byte[0] as char);
+				io::stdout().flush().ok();
+				
+				if elapsed >= threshold
+				{
+					covert_bits.push('1');
+				}
+				else
+				{
+					covert_bits.push('0');
+				}
 
-    // Optional timing output for troubleshooting: SHOW_TIMINGS=1 ./chatclient
-    if std::env::var_os("SHOW_TIMINGS").is_some() {
-        for (i, elapsed) in times.iter().enumerate() {
-            eprintln!("Delay {:>3}: {:.3} s", i + 1, elapsed.as_secs_f64());
-        }
-    }
-    Ok(())
+				// if message has EOF, end loop
+				if overt_string.ends_with("EOF")
+				{
+					println!("\nMessage recieved. Disconnecting from server.");
+					break;
+				}
+
+			}
+			Err(e) => // print error if there is one
+			{
+				eprintln!("\nError reading from server: {e}");
+				break;
+			}
+		}
+
+		
+
+
+		//let temp_str = &bits_to_string(&covert_bits);
+		//println!("{temp_str}");	
+	}
+
+	//println!("{covert_bits}");
+	covert_string.push_str(&bits_to_string(&covert_bits));
+
+	println!("Covert message:");
+	println!("{covert_string}");
+	
+	//println!("{times:?}");
+	
+	/*
+	// read lines from stdin, send to server
+	let stdin = io::stdin();
+
+	for line in stdin.lock().lines()
+	{
+		// read what the user types in the terminal
+		let text = match line
+		{
+			Ok(t) => t,
+			Err(_) => break,
+		};
+
+		// write what they typed to the network
+		if writeln!(writer, "{text}").is_err()
+		{
+			break;
+		}
+
+		// read what server responds with
+		let mut response = String::new();
+		match reader.read_line(&mut response)
+		{
+			Ok(0) => break, // server closed the connection
+			Ok(_) => print!("Server replied: {response}"),
+			Err(e) =>
+			{
+				eprintln!("Error reading from server: {e}");
+				break;
+			}
+		}
+	}
+	*/
 }
