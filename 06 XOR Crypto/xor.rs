@@ -2,7 +2,7 @@ use std::fs;
 use std::io::{self, Read, Write};
 
 fn main() -> io::Result<()> {
-    let key = fs::read("key2")?;
+    let key = fs::read("key")?;
 
     let stdin = io::stdin();
     let mut input = stdin.lock();
@@ -20,7 +20,7 @@ fn main() -> io::Result<()> {
         }
 
         for i in 0..bytes_read {
-            buffer[i] ^= key[position + i % key.len()]; // Make sure the key wraps if need be
+            buffer[i] ^= key[(position + i) % key.len()]; // Make sure the key wraps if need be
         }
         output.write_all(&buffer[..bytes_read])?;
         position += bytes_read;
