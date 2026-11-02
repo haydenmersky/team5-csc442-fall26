@@ -1,19 +1,24 @@
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::io::{self, Read};
 
-fn main(){
+fn main() {
     let now = SystemTime::now();
-    println!("Time now {}",now)
-    let mut epoch = UNIX_EPOCH;
+
+    println!("Time now: {:?}", now);
+
     let mut stanin = String::new();
-    io::stdin() // Using standard in I/O
-        .read_to_string(&mut stanin) // Append input to stanin (NEED &mut to change contents of string)
-        .expect("Failed to read input"); // If it fails, return
-    
+
+    io::stdin()
+        .read_to_string(&mut stanin)
+        .expect("Failed to read input");
 
     let since_epoch = now
-        .duration_since(epoch)
+        .duration_since(UNIX_EPOCH)
         .expect("Time went backwards");
-    println!("epoch {}",epoch)
+
+    println!("Seconds since epoch: {}", since_epoch.as_secs());
 
     let seconds = since_epoch.as_secs();
+
+    println!("Seconds: {}", seconds);
 }
