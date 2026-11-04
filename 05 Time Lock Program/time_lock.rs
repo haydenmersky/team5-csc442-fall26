@@ -24,4 +24,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let minute = values[4];
     let second = values[5];
     
+    // Construct the epoch date and time
+    let date = NaiveDate::from_ymd_opt(year, month, day)
+        .ok_or("Invalid date")?;
+
+    let epoch_naive = date.and_hms_opt(hour, minute, second)
+        .ok_or("Invalid time")?;
+
+    // Interpret epoch using the system's local timezone
+    let epoch = match Local.from_local_datetime(&epoch_naive) {
+        LocalResult::Single(dt) => dt,
+
+        // If the time occurs twice, choose the earlier occurrence
+        LocalResult::Ambiguous(first, _) => first,
+
+        // If the time does not exist because of DST, reject it
+        LocalResult::None => {
+            return Err("Epoch falls in a nonexistent local time".into());
+        }
+    };
+
+    // Get current system time
+    let now = Local::now();
+
+    // Convert both times to Unix timestamps
+    let elapsed = now.timestamp() - epoch.timestamp();
+
+    if elapsed < 0 {
+        return Err("Epoch cannot be in the future".into());
+    }
+
+    // First MD5: hash the elapsed seconds
+    let first_hash = md5::compute(elapsed.to_string().as_bytes());
+
+    Ok(())
 }
