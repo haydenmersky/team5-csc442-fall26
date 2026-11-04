@@ -1,24 +1,27 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use chrono::{Local, LocalResult, NaiveDate, TimeZone};
 use std::io::{self, Read};
 
-fn main() {
-    let now = SystemTime::now();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    println!("Time now: {:?}", now);
+    // Read epoch from stdin
+    let mut input = String::new();
+    io::stdin().read_to_string(&mut input)?;
 
-    let mut stanin = String::new();
+    // Parse YYYY MM DD HH mm SS
+    let values: Vec<u32> = input
+        .split_whitespace()
+        .map(|s| s.parse::<u32>())
+        .collect::<Result<Vec<u32>, _>>()?;
 
-    io::stdin()
-        .read_to_string(&mut stanin)
-        .expect("Failed to read input");
+    if values.len() != 6 {
+        return Err("Expected format: YYYY MM DD HH mm SS".into());
+    }
 
-    let since_epoch = now
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-
-    println!("Seconds since epoch: {}", since_epoch.as_secs());
-
-    let seconds = since_epoch.as_secs();
-
-    println!("Seconds: {}", seconds);
+    let year = values[0] as i32;
+    let month = values[1];
+    let day = values[2];
+    let hour = values[3];
+    let minute = values[4];
+    let second = values[5];
+    
 }
