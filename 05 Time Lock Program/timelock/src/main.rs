@@ -1,6 +1,40 @@
 use chrono::{Local, LocalResult, NaiveDate, TimeZone};
 use std::io::{self, Read};
 
+fn get_code(input: &str) -> String
+{
+	let mut output_code: String = String::new();
+	
+	// getting the letters for the start of the code
+	for char in input.to_string().chars()
+	{
+		if output_code.len() == 2
+		{
+			break;
+		}
+		else if char.is_alphabetic()
+		{
+			output_code.push(char);
+		}
+	}
+
+	// getting the numbers for the end of the code
+	for char in input.to_string().chars().rev()
+	{
+		if output_code.len() == 4
+		{
+			break;
+		}
+		else if char.is_numeric()
+		{
+			output_code.push(char);
+		}
+	}
+
+	// return code
+	output_code
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Read epoch from stdin
@@ -58,4 +92,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let first_hash = md5::compute(elapsed.to_string().as_bytes());
 
     Ok(())
+
+    // second MD5:
+    let second_hash = md5::compute(first_hash.as_bytes());
+
+    println("{}", second_hash);
 }
