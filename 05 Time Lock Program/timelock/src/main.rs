@@ -80,10 +80,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get current system time
     let now = Local::now();
-
-    // Convert both times to Unix timestamps
+    //get time elapsed and mod it by 60
     let elapsed = now.timestamp() - epoch.timestamp();
 
+    let elapsed = elapsed - (elapsed % 60);
+    
     if elapsed < 0 {
         return Err("Epoch cannot be in the future".into());
     }
@@ -92,10 +93,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let first_hash = md5::compute(elapsed.to_string()); 
 
     // second MD5:
-    let second_hash = md5::compute(first_hash.as_ref());
+    let second_hash = md5::compute(format!("{:x}", first_hash));
 
-    println!("{:x}", second_hash);
+    // Convert final hash to hexadecimal
+    let final_hash = format!("{:x}", second_hash);
+
+    // Extract the four-character TimeLock code
+    let code = get_code(&final_hash);
+    
+    // Output only the code
+    println!("{}", code);
 
     Ok(())
 }
-
