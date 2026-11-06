@@ -1,6 +1,9 @@
 use chrono::{Local, LocalResult, NaiveDate, TimeZone};
 use std::io::{self, Read};
 
+// run with: echo "XXXX XX XX XX XX XX" | ./target/release/timelock
+// where the X's are replaced with a time
+
 fn get_code(input: &str) -> String
 {
 	let mut output_code: String = String::new();
