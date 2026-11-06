@@ -89,12 +89,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // First MD5: hash the elapsed seconds
-    let first_hash = md5::compute(elapsed.to_string().as_bytes());
-
-    Ok(())
+    let first_hash = md5::compute(elapsed.to_string()); 
 
     // second MD5:
-    let second_hash = md5::compute(first_hash.as_bytes());
+    let second_hash = md5::compute(first_hash.as_ref());
 
-    println("{}", second_hash);
+    println!("{:x}", second_hash);
+
+    Ok(())
 }
+
