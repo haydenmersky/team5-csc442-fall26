@@ -1,6 +1,43 @@
 use chrono::{Local, LocalResult, NaiveDate, TimeZone};
 use std::io::{self, Read};
 
+// run with: echo "XXXX XX XX XX XX XX" | ./target/release/timelock
+// where the X's are replaced with a time
+
+fn get_code(input: &str) -> String
+{
+	let mut output_code: String = String::new();
+	
+	// getting the letters for the start of the code
+	for char in input.to_string().chars()
+	{
+		if output_code.len() == 2
+		{
+			break;
+		}
+		else if char.is_alphabetic()
+		{
+			output_code.push(char);
+		}
+	}
+
+	// getting the numbers for the end of the code
+	for char in input.to_string().chars().rev()
+	{
+		if output_code.len() == 4
+		{
+			break;
+		}
+		else if char.is_numeric()
+		{
+			output_code.push(char);
+		}
+	}
+
+	// return code
+	output_code
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Read epoch from stdin
@@ -46,16 +83,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get current system time
     let now = Local::now();
-
-    // Convert both times to Unix timestamps
+    //get time elapsed and mod it by 60
     let elapsed = now.timestamp() - epoch.timestamp();
 
+    let elapsed = elapsed - (elapsed % 60);
+    
     if elapsed < 0 {
         return Err("Epoch cannot be in the future".into());
     }
 
     // First MD5: hash the elapsed seconds
-    let first_hash = md5::compute(elapsed.to_string().as_bytes());
+    let first_hash = md5::compute(elapsed.to_string()); 
+
+    // second MD5:
+    let second_hash = md5::compute(format!("{:x}", first_hash));
+
+    // Convert final hash to hexadecimal
+    let final_hash = format!("{:x}", second_hash);
+
+    // Extract the four-character TimeLock code
+    let code = get_code(&final_hash);
+    
+    // Output only the code
+    println!("{}", code);
 
     Ok(())
 }
