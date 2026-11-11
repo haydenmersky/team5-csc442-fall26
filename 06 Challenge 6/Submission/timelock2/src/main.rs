@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //let second = values[5];
     
     // Construct the epoch date and time
-    let date = NaiveDate::from_ymd_opt(2023, 11, 03)
+    let date = NaiveDate::from_ymd_opt(2026, 01, 01)
         .ok_or("Invalid date")?;
 
     let epoch_naive = date.and_hms_opt(00, 00, 00)
